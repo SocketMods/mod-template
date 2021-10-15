@@ -65,6 +65,7 @@ dependencies {
 }
 
 java {
+    archivesBaseName = "${project.name}-${mc_version}"
     toolchain.languageVersion = JavaLanguageVersion.of(16)
     withSourcesJar()
 }
@@ -80,23 +81,15 @@ var manifestAttributes = [
         "Git-Commit-Timestamp"  : versions.getCommitTimestamp()
 ] as LinkedHashMap
 
-tasks.named('jar', Jar).configure {
-    finalizedBy 'reobfJar'
-    archivesBaseName = "${project.name}-${mc_version}"
-
+tasks.withType(Jar).configureEach {
     manifest.attributes(manifestAttributes)
     includeEmptyDirs false
     preserveFileTimestamps = false
     reproducibleFileOrder = true
 }
 
-tasks.named('sourcesJar', Jar).configure {
-    archivesBaseName = "${project.name}-${mc_version}"
-
-    manifest.attributes(manifestAttributes)
-    includeEmptyDirs false
-    preserveFileTimestamps = false
-    reproducibleFileOrder = true
+tasks.named('jar', Jar).configure {
+    finalizedBy 'reobfJar'
 }
 
 // noinspection UnnecessaryQualifiedReference
