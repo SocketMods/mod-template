@@ -23,8 +23,8 @@ minecraft {
     mappings channel: mappings_channel, version: mappings_version
 
     runs {
-        client {
-            workingDirectory project.file('run/client') as File
+        configureEach {
+            workingDirectory project.file('run/' + it.name) as File
 
             property 'forge.logging.markers', logging_markers
             property 'forge.logging.console.level', logging_console
@@ -33,32 +33,21 @@ minecraft {
             mods.register(modid as String) {
                 source sourceSets.main as SourceSet
             }
+        }
+
+        client {
         }
 
         server {
-            workingDirectory project.file('run/server') as File
-
-            property 'forge.logging.markers', logging_markers
-            property 'forge.logging.console.level', logging_console
-
-            ideaModule "${project.name}.main"
-            mods.register(modid as String) {
-                source sourceSets.main as SourceSet
-            }
         }
 
         data {
-            workingDirectory project.file('run/data') as File
-
-            property 'forge.logging.markers', logging_markers
-            property 'forge.logging.console.level', logging_console
-
             args '--mod', modid, '--all'
             args '--output', sourceSets.data.resources.srcDirs[0].toString()
             args '--existing', sourceSets.main.resources.srcDirs[0].toString()
 
             ideaModule "${project.name}.data"
-            mods.register(modid as String) {
+            mods.named(modid as String) {
                 sources sourceSets.main as SourceSet, sourceSets.data as SourceSet
             }
         }
@@ -122,6 +111,7 @@ publishing {
         it.artifactId = project.name
         it.version = "$mc_version-${versions.getRawVersion()}${versions.isSnapshot() ? '-SNAPSHOT' : ''}"
     }
+
     repositories {
         maven {
             name 'projectLocal'
