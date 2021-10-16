@@ -16,7 +16,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'org.eclipse.jgit:org.eclipse.jgit:5.12.+'
+        classpath 'org.eclipse.jgit:org.eclipse.jgit:5.13.+'
     }
 }
 
