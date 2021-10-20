@@ -5,6 +5,10 @@ pluginManagement {
             name 'MinecraftForge'
             url 'https://files.minecraftforge.net/maven'
         }
+        maven {
+            name 'ParchmentMC'
+            url 'https://maven.parchmentmc.org'
+        }
     }
     resolutionStrategy {
         eachPlugin {
