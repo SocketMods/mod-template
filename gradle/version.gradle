@@ -26,7 +26,7 @@ class VersionExtension {
 
     Project project
     boolean stripBranchPrefix = true
-    String customPrefix = null
+    List<String> customPrefixes = []
     boolean useDirty = false
     boolean parsedVersion = false
     String timestamp = '1970-01-01T00:00:00+00:00'
@@ -86,17 +86,20 @@ class VersionExtension {
                 descCount = allExceptLast.substring(secondToLastSep + 1)
 
                 if (stripBranchPrefix) {
-                    if (customPrefix != null && descVer.length() > customPrefix.length() + 1) {
-                        String sep = descVer.charAt(customPrefix.length())
-                        if (descVer.startsWith(customPrefix) && (sep == '/' || sep == '-')) {
-                            descVer = descVer.substring(customPrefix.length() + 1)
-                        }
-                    }
-
                     if (branchName != null && descVer.length() > branchName.length() + 1) {
                         String sep = descVer.charAt(branchName.length())
                         if (descVer.startsWith(branchName) && (sep == '/' || sep == '-')) {
                             descVer = descVer.substring(branchName.length() + 1)
+                        }
+                    }
+
+                    for (String prefix : customPrefixes) {
+                        if (descVer.length() > prefix.length() + 1) {
+                            String sep = descVer.charAt(prefix.length())
+                            if (descVer.startsWith(prefix) && (sep == '/' || sep == '-')) {
+                                descVer = descVer.substring(prefix.length() + 1)
+                                break
+                            }
                         }
                     }
                 }
@@ -130,11 +133,18 @@ class VersionExtension {
     }
 
     void setCustomPrefix(String customPrefix) {
-        this.customPrefix = customPrefix
+        if (customPrefix?.empty) return
+        if (customPrefix == null) this.customPrefixes.clear()
+        this.customPrefixes += customPrefix
     }
 
-    String getCustomPrefix() {
-        return customPrefix
+    void customPrefix(String customPrefix) {
+        if (customPrefix?.empty) return
+        if (customPrefix != null) this.customPrefixes += customPrefix
+    }
+
+    String[] getCustomPrefixes() {
+        return customPrefixes
     }
 
     void setUseDirty(boolean useDirty) {
