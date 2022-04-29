@@ -159,7 +159,7 @@ class VersionExtension {
     void setCustomPrefix(String customPrefix) {
         if (customPrefix?.empty) return
         if (customPrefix == null) this.customPrefixes.clear()
-        this.customPrefixes += customPrefix
+        else this.customPrefixes += customPrefix
     }
 
     void customPrefix(String customPrefix) {
