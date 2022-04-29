@@ -6,6 +6,11 @@ plugins {
 }
 apply from: 'gradle/version.gradle'
 
+versions {
+    customPrefix = mc_version
+    incrementPositionIfSnapshot(-2) // Second to last version: #.#.(#).#
+    skipIncrementForClassifiers('alpha', 'beta', 'pre', 'rc')
+}
 version = versions.getVersion()
 println "Mod version: $version"
 
