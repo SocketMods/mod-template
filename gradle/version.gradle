@@ -35,6 +35,8 @@ class VersionExtension {
     String rawVersion = '0.0.0'
     boolean snapshot = true
     String classifiers = '-UNKNOWN'
+    int incrementPositionIfSnapshot = 0
+    Spec<VersionInformation> skipIncrement = Specs.satisfyNone()
 
     VersionExtension(Project project) {
         this.project = project
@@ -117,6 +119,28 @@ class VersionExtension {
             }
 
             if (snapshot) {
+                if (classifiers != '-UNKNOWN' && rawVersion != '0.0.0' && incrementPositionIfSnapshot != 0
+                        && !skipIncrement.isSatisfiedBy(new VersionInformation(rawVersion, snapshot, classifiers, timestamp, commitId))) {
+                    String[] rawVersionSplit = rawVersion.split('[\\-+_]', 2)
+                    String[] versionSplit = rawVersionSplit[0].split('\\.')
+                    boolean changed
+                    if (versionSplit.length >= Math.abs(incrementPositionIfSnapshot)) {
+                        int i = incrementPositionIfSnapshot < 0
+                                ? versionSplit.length + incrementPositionIfSnapshot
+                                : incrementPositionIfSnapshot - 1
+                        try {
+                            versionSplit[i] = (Integer.parseInt(versionSplit[i]) + 1) as int
+
+                            boolean hasExtra = rawVersionSplit.length > 1
+                            if (hasExtra) {
+                                rawVersion = String.join("${rawVersion.charAt(rawVersionSplit[0].length())}",
+                                        [String.join('.', versionSplit), rawVersionSplit[1]])
+                            } else {
+                                rawVersion = String.join('.', versionSplit)
+                            }
+                        } catch (NumberFormatException ignored) {}
+                    }
+                }
                 classifiers = '-SNAPSHOT' + classifiers
             }
         } catch (Exception e) {
@@ -153,6 +177,50 @@ class VersionExtension {
 
     boolean getUseDirty() {
         return useDirty
+    }
+
+    /**
+     * @param incrementPositionIfSnapshot the one-based position to increment, or {@code 0} to disable. Negative values 
+     * are interpreted as positions starting from the end; {@code -1} would be the last number in the version, {@code -2}
+     * would be the second-to-last position, and so on.
+     */
+    void incrementPositionIfSnapshot(int incrementPositionIfSnapshot) {
+        this.setIncrementPositionIfSnapshot(incrementPositionIfSnapshot)
+    }
+
+    /**
+     * @param incrementPositionIfSnapshot the one-based position to increment, or {@code 0} to disable. Negative values 
+     * are interpreted as positions starting from the end; {@code -1} would be the last number in the version, {@code -2}
+     * would be the second-to-last position, and so on.
+     */
+    void setIncrementPositionIfSnapshot(int incrementPositionIfSnapshot) {
+        this.incrementPositionIfSnapshot = incrementPositionIfSnapshot
+    }
+
+    boolean getIncrementPositionIfSnapshot() {
+        return incrementPositionIfSnapshot
+    }
+
+    void skipIncrementForClassifiers(List<String> classifiers) {
+        skipIncrement { ver ->
+            classifiers.any {ver.rawVersion.contains("-$it")}
+        }
+    }
+
+    void skipIncrementForClassifiers(String... classifiers) {
+        skipIncrementForClassifiers([classifiers].flatten().findAll { it != null })
+    }
+
+    void skipIncrement(Spec<VersionInformation> skipIncrement) {
+        this.setSkipIncrement(skipIncrement)
+    }
+
+    void setSkipIncrement(Spec<VersionInformation> skipIncrement) {
+        this.skipIncrement = skipIncrement
+    }
+
+    Spec<String> getSkipIncrement() {
+        return skipIncrement
     }
 
     String getVersion() {
@@ -193,6 +261,19 @@ class VersionExtension {
     boolean isSnapshot() {
         calculateVersion()
         return this.snapshot
+    }
+
+    @groovy.transform.Immutable
+    class VersionInformation {
+        String rawVersion
+        boolean snapshot
+        /**
+         * The classifiers of the version. This does not include the automatically prepended {@code -SNAPSHOT} classifier
+         * when {@link #snapshot} is {@code true}.
+         */
+        String classifiers
+        String commitTimestamp
+        String commitId
     }
 }
 
